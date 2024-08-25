@@ -121,7 +121,7 @@ def get_available_scenes(nusc):
         scene_token = scene['token']
         scene_rec = nusc.get('scene', scene_token)
         sample_rec = nusc.get('sample', scene_rec['first_sample_token'])
-        sd_rec = nusc.get('sample_data', sample_rec['data']['LIDAR_TOP'])
+        sd_rec = nusc.get('sample_data', sample_rec['data']['LIDAR_FRONT'])
         has_more_frames = True
         scene_not_exist = False
         while has_more_frames:
@@ -166,8 +166,8 @@ def _fill_trainval_infos(nusc,
     val_nusc_infos = []
 
     for sample in mmengine.track_iter_progress(nusc.sample):
-        lidar_token = sample['data']['LIDAR_TOP']
-        sd_rec = nusc.get('sample_data', sample['data']['LIDAR_TOP'])
+        lidar_token = sample['data']['LIDAR_FRONT']
+        sd_rec = nusc.get('sample_data', sample['data']['LIDAR_FRONT'])
         cs_record = nusc.get('calibrated_sensor',
                              sd_rec['calibrated_sensor_token'])
         pose_record = nusc.get('ego_pose', sd_rec['ego_pose_token'])
@@ -197,23 +197,28 @@ def _fill_trainval_infos(nusc,
 
         # obtain 6 image's information per frame
         camera_types = [
-            'CAM_FRONT',
-            'CAM_FRONT_RIGHT',
-            'CAM_FRONT_LEFT',
-            'CAM_BACK',
-            'CAM_BACK_LEFT',
-            'CAM_BACK_RIGHT',
+            'CAMERA_FRONT',
+            'CAMERA_FRONT_RIGHT',
+            'CAMERA_FRONT_LEFT',
         ]
+        exception = False
         for cam in camera_types:
-            cam_token = sample['data'][cam]
+            try:
+                cam_token = sample['data'][cam]
+            except:
+                exception = True
+                break
             cam_path, _, cam_intrinsic = nusc.get_sample_data(cam_token)
             cam_info = obtain_sensor2top(nusc, cam_token, l2e_t, l2e_r_mat,
                                          e2g_t, e2g_r_mat, cam)
             cam_info.update(cam_intrinsic=cam_intrinsic)
             info['cams'].update({cam: cam_info})
+        
+        if exception:
+            continue
 
         # obtain sweeps for a single key-frame
-        sd_rec = nusc.get('sample_data', sample['data']['LIDAR_TOP'])
+        sd_rec = nusc.get('sample_data', sample['data']['LIDAR_FRONT'])
         sweeps = []
         while len(sweeps) < max_sweeps:
             if not sd_rec['prev'] == '':
@@ -353,13 +358,10 @@ def export_2d_annotation(root_path, info_path, version, mono3d=True):
     """
     # get bbox annotations for camera
     camera_types = [
-        'CAM_FRONT',
-        'CAM_FRONT_RIGHT',
-        'CAM_FRONT_LEFT',
-        'CAM_BACK',
-        'CAM_BACK_LEFT',
-        'CAM_BACK_RIGHT',
-    ]
+            'CAMERA_FRONT',
+            'CAMERA_FRONT_RIGHT',
+            'CAMERA_FRONT_LEFT',
+        ]
     nusc_infos = mmengine.load(info_path)['infos']
     nusc = NuScenes(version=version, dataroot=root_path, verbose=True)
     # info_2d_list = []

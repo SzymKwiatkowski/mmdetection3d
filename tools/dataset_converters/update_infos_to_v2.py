@@ -224,18 +224,18 @@ def generate_nuscenes_camera_instances(info, nusc):
 
     # get bbox annotations for camera
     camera_types = [
-        'CAM_FRONT',
-        'CAM_FRONT_RIGHT',
-        'CAM_FRONT_LEFT',
-        'CAM_BACK',
-        'CAM_BACK_LEFT',
-        'CAM_BACK_RIGHT',
-    ]
+            'CAMERA_FRONT',
+            'CAMERA_FRONT_RIGHT',
+            'CAMERA_FRONT_LEFT',
+        ]
 
     empty_multicamera_instance = get_empty_multicamera_instances(camera_types)
 
     for cam in camera_types:
-        cam_info = info['cams'][cam]
+        try:
+            cam_info = info['cams'][cam]
+        except:
+            continue
         # list[dict]
         ann_infos = get_nuscenes_2d_boxes(
             nusc,
@@ -248,13 +248,10 @@ def generate_nuscenes_camera_instances(info, nusc):
 
 def update_nuscenes_infos(pkl_path, out_dir):
     camera_types = [
-        'CAM_FRONT',
-        'CAM_FRONT_RIGHT',
-        'CAM_FRONT_LEFT',
-        'CAM_BACK',
-        'CAM_BACK_LEFT',
-        'CAM_BACK_RIGHT',
-    ]
+            'CAMERA_FRONT',
+            'CAMERA_FRONT_RIGHT',
+            'CAMERA_FRONT_LEFT',
+        ]
     print(f'{pkl_path} will be modified.')
     if out_dir in pkl_path:
         print(f'Warning, you may overwriting '
@@ -273,6 +270,7 @@ def update_nuscenes_infos(pkl_path, out_dir):
 
     print('Start updating:')
     converted_list = []
+    ignore_class_name = set()
     for i, ori_info_dict in enumerate(
             mmengine.track_iter_progress(data_list['infos'])):
         temp_data_info = get_empty_standard_data_info(

@@ -173,7 +173,7 @@ def create_groundtruth_database(dataset_class_name,
         dataset_cfg.update(
             use_valid_flag=True,
             data_prefix=dict(
-                pts='samples/LIDAR_TOP', img='', sweeps='sweeps/LIDAR_TOP'),
+                pts='samples/LIDAR_FRONT', img='', sweeps='sweeps/LIDAR_FRONT'),
             pipeline=[
                 dict(
                     type='LoadPointsFromFile',
